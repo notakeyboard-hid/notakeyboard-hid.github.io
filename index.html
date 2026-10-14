@@ -1,0 +1,255 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NaK - NotAKeyboard</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #10131a;
+            --panel: #191e29;
+            --text: #e8edf7;
+            --muted: #a6b0c3;
+            --accent: #67e8b0;
+            --border: #30394a;
+            --warning: #ffb454;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 32px 18px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, Arial, sans-serif;
+            line-height: 1.7;
+        }
+
+        main {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        header {
+            padding: 35px;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #202d39, #191e29);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--accent);
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            letter-spacing: -2px;
+        }
+
+        header p,
+        .muted {
+            color: var(--muted);
+        }
+
+        section {
+            padding: 25px;
+            margin: 20px 0;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: var(--accent);
+        }
+
+        h3 {
+            margin-top: 24px;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            padding: 3px 7px;
+            background: #0e1219;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            overflow-wrap: anywhere;
+        }
+
+        .warning {
+            padding: 16px;
+            margin: 18px 0;
+            background: #33271b;
+            border-left: 4px solid var(--warning);
+            border-radius: 7px;
+        }
+
+        .notice {
+            padding: 16px;
+            background: #142c26;
+            border-left: 4px solid var(--accent);
+            border-radius: 7px;
+        }
+
+        .example {
+            display: block;
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            margin: 20px auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        li {
+            padding-left: 5px;
+            margin: 12px 0;
+        }
+
+        footer {
+            padding: 25px;
+            color: var(--muted);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <header>
+        <h1>NaK</h1>
+        <p><strong>NotAKeyboard</strong> — Another USB HID device.</p>
+        <p>
+            The name is inspired by NaK, the extremely dangerous
+            sodium-potassium (Na and K) alloy.
+        </p>
+    </header>
+
+    <div class="notice">
+        This project is intended for educational and learning purposes
+        only. It is not designed, tested, or intended for production,
+        commercial, or real-world environments. The authors assume
+        no responsibility for misuse of this material.
+    </div>
+
+    <section id="setup">
+        <h2>Setup</h2>
+
+        <img
+            class="example"
+            src="docs/example.png"
+            alt="Example of the GPIO11 switch connected to ground"
+        >
+
+        <ol>
+            <li>
+                Connect GPIO11 to GND through a switch, as shown in the
+                image above. Set the switch to OFF.
+            </li>
+            <li>
+                Connect the Raspberry Pi Pico to your computer while
+                holding down the BOOTSEL button. When it appears as a
+                removable storage device, release BOOTSEL.
+            </li>
+            <li>
+                Download the repository and extract it. Open the
+                <code>format_pico</code> folder and copy
+                <code>flash_nuke.uf2</code> to the Pico. Wait for it
+                to restart. This erases the existing firmware.
+            </li>
+            <li>
+                Open the <code>software</code> folder. Copy
+                <code>adafruit-circuitpython-raspberry_pi_pico-en_US-9.1.1.uf2</code>
+                to the Pico and wait for it to restart. It should
+                appear as a drive named <code>CIRCUITPY</code>.
+            </li>
+            <li>
+                Copy the <code>lib</code> folder to the
+                <code>CIRCUITPY</code> drive. Replace files if prompted.
+            </li>
+            <li>
+                Copy <code>payload.py</code>, <code>code.py</code>,
+                and <code>boot.py</code> to the root of the drive.
+                Replace files if prompted.
+            </li>
+        </ol>
+
+        <div class="warning">
+            <strong>Warning:</strong> Make sure the switch is OFF
+            during setup.
+        </div>
+    </section>
+
+    <section id="payloads">
+        <h2>Payloads</h2>
+
+        <p>
+            Visit
+            <a href="https://ddconverter.github.io"
+               target="_blank" rel="noopener noreferrer">DDConverter</a>,
+            paste your script, and click Convert. Keep in mind that
+            much of DuckyScript may not be supported.
+        </p>
+
+        <ol>
+            <li>Download the converted payload.</li>
+            <li>Connect the Pico with the switch OFF.</li>
+            <li>
+                Copy the downloaded <code>payload.py</code> to the
+                root of the Pico drive and replace the existing file
+                if prompted.
+            </li>
+        </ol>
+    </section>
+
+    <section id="usage">
+        <h2>Usage</h2>
+
+        <ol>
+            <li>Eject and unplug the Pico from your computer.</li>
+            <li>Turn the switch ON only when you are ready to use it.</li>
+        </ol>
+
+        <div class="warning">
+            <strong>Important safety warning:</strong>
+            When the switch is ON, the device is armed. Connecting it
+            to a computer while armed may execute the configured
+            payload very quickly. Only use authorized test devices
+            and systems, and verify the payload before enabling it.
+        </div>
+    </section>
+
+    <section id="editing">
+        <h2>Editing the payload</h2>
+
+        <p>
+            Turn the switch OFF, connect the Pico to your computer,
+            and edit <code>payload.py</code> as needed.
+        </p>
+
+        <p class="muted">
+            Always test payloads in a controlled environment and
+            obtain permission before using a USB HID device on a
+            computer you do not own or administer.
+        </p>
+    </section>
+
+    <footer>
+        <p>NaK — NotAKeyboard</p>
+        <p>Have fun, and use responsibly.</p>
+    </footer>
+</main>
+</body>
+</html>
