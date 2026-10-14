@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ducky Script to Python Converter</title>
+<style>
+    :root {
+        color-scheme: dark;
+        --bg: #10131a;
+        --panel: #191e29;
+        --text: #e8edf7;
+        --muted: #a6b0c3;
+        --accent: #67e8b0;
+        --border: #30394a;
+        --warning: #ffb454;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        padding: 32px 18px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, Arial, sans-serif;
+        line-height: 1.7;
+    }
+
+    main { max-width: 900px; margin: auto; }
+
+    header {
+        padding: 35px;
+        margin-bottom: 24px;
+        background: linear-gradient(135deg, #202d39, #191e29);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+    }
+
+    h1 {
+        margin: 0;
+        color: var(--accent);
+        font-size: clamp(2rem, 7vw, 3.5rem);
+        letter-spacing: -1.5px;
+        line-height: 1.15;
+    }
+
+    header p, .muted { color: var(--muted); }
+    section {
+        padding: 25px;
+        margin: 20px 0;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+    }
+
+    h2 { margin-top: 0; color: var(--accent); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    textarea {
+        display: block;
+        width: 100%;
+        min-height: 250px;
+        padding: 14px;
+        margin: 12px 0 16px;
+        color: var(--text);
+        background: #0e1219;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font: 14px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace;
+        resize: vertical;
+        tab-size: 4;
+    }
+
+    textarea:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    button {
+        display: inline-block;
+        padding: 11px 17px;
+        margin: 4px 5px 4px 0;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #263544;
+        color: var(--text);
+        font: inherit;
+        font-weight: 650;
+        cursor: pointer;
+        transition: background .2s, transform .2s;
+    }
+
+    button:hover { background: #344858; }
+    button:active { transform: translateY(1px); }
+    button.primary {
+        background: #174b3c;
+        border-color: #367b62;
+        color: #baf8dc;
+    }
+    button.primary:hover { background: #20634e; }
+
+    .notice {
+        padding: 16px;
+        margin: 18px 0;
+        background: #142c26;
+        border-left: 4px solid var(--accent);
+        border-radius: 7px;
+        color: var(--muted);
+    }
+
+    .warning {
+        padding: 16px;
+        margin: 18px 0;
+        background: #33271b;
+        border-left: 4px solid var(--warning);
+        border-radius: 7px;
+    }
+
+    .section-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .status { color: var(--muted); font-size: .9rem; }
+    footer { padding: 25px; color: var(--muted); text-align: center; }
+
+    @media (max-width: 600px) {
+        body { padding: 18px 12px; }
+        header, section { padding: 21px; }
+        button { width: 100%; margin-right: 0; }
+        textarea { min-height: 210px; }
+    }
+</style>
+</head>
+<body>
+<main>
+    <header>
+        <h1>Ducky Script Converter</h1>
+        <p>Convert supported DuckyScript commands into a CircuitPython HID <code>payload.py</code> script.</p>
+    </header>
+
+    <div class="notice">
+        <strong>Heads up:</strong> This converter supports common commands, but it cannot translate every DuckyScript feature. Review the generated code and only use HID payloads on devices you own or are authorized to test.
+    </div>
+
+    <section>
+        <h2>Converter</h2>
+        <p class="muted">Paste your DuckyScript below, then convert it to Python.</p>
+        <label for="duckyScriptInput"><strong>DuckyScript input</strong></label>
+        <textarea id="duckyScriptInput" rows="15" spellcheck="false" placeholder="REM Example payload&#10;DELAY 1000&#10;STRING Hello world&#10;ENTER"></textarea>
+        <button class="primary" type="button" onclick="convertDuckyToPython()">Convert to Python</button>
+        <button type="button" onclick="clearInput()">Clear input</button>
+    </section>
+
+    <section>
+        <div class="section-heading">
+            <h2>Converted Python Script</h2>
+            <span class="status" id="status" aria-live="polite">Ready</span>
+        </div>
+        <textarea id="pythonScriptOutput" rows="20" readonly spellcheck="false" placeholder="Your converted Python script will appear here..."></textarea>
+        <button class="primary" type="button" onclick="downloadPythonScript()">Download payload.py</button>
+        <button type="button" onclick="copyPythonScript()">Copy Python</button>
+    </section>
+
+    <div class="warning">
+        <strong>Compatibility note:</strong> The output uses Adafruit CircuitPython HID libraries. Install the required libraries on your CircuitPython device before running it. Commands that are not recognized may need manual editing.
+    </div>
+
+    <footer>
+        <p>Ducky Script to Python Converter</p>
+        <p>Review generated code before running it.</p>
+    </footer>
+</main>
+
+<script>
+const keycodeMap = {
+    ENTER: "Keycode.ENTER", GUI: "Keycode.GUI", SHIFT: "Keycode.SHIFT",
+    CTRL: "Keycode.CONTROL", CONTROL: "Keycode.CONTROL", ALT: "Keycode.ALT",
+    TAB: "Keycode.TAB", ESC: "Keycode.ESCAPE", ESCAPE: "Keycode.ESCAPE",
+    SPACE: "Keycode.SPACEBAR", SPACEBAR: "Keycode.SPACEBAR",
+    DELETE: "Keycode.DELETE", BACKSPACE: "Keycode.BACKSPACE",
+    UP: "Keycode.UP_ARROW", DOWN: "Keycode.DOWN_ARROW",
+    LEFT: "Keycode.LEFT_ARROW", RIGHT: "Keycode.RIGHT_ARROW",
+    CAPSLOCK: "Keycode.CAPS_LOCK", CAPS_LOCK: "Keycode.CAPS_LOCK",
+    F1: "Keycode.F1", F2: "Keycode.F2", F3: "Keycode.F3",
+    F4: "Keycode.F4", F5: "Keycode.F5", F6: "Keycode.F6",
+    F7: "Keycode.F7", F8: "Keycode.F8", F9: "Keycode.F9",
+    F10: "Keycode.F10", F11: "Keycode.F11", F12: "Keycode.F12",
+    NUMLOCK: "Keycode.KEYPAD_NUMLOCK", SCROLLLOCK: "Keycode.SCROLL_LOCK"
+};
+
+const customCommandMap = {
+    DEFINE: "# TODO: DEFINE requires manual implementation",
+    ATTACK_F: "# TODO: ATTACK_F requires manual implementation",
+    STRINGLN: "# TODO: STRINGLN requires manual implementation"
+};
+
+function parseKeycode(key) {
+    return keycodeMap[key.toUpperCase()] || `Keycode.${key.toUpperCase()}`;
+}
+
+function pythonString(value) {
+    return "'" + value.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\r/g, "\\r").replace(/\n/g, "\\n") + "'";
+}
+
+function convertDuckyToPython() {
+    const source = document.getElementById("duckyScriptInput").value;
+    const output = [
+        "import time",
+        "import usb_hid",
+        "from adafruit_hid.keyboard import Keyboard",
+        "from adafruit_hid.keycode import Keycode",
+        "from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS",
+        "",
+        "keyboard = Keyboard(usb_hid.devices)",
+        "keyboard_layout = KeyboardLayoutUS(keyboard)",
+        "",
+        "def payload():"
+    ];
+
+    let converted = 0;
+    for (const rawLine of source.split(/\r?\n/)) {
+        const line = rawLine.trim();
+        if (!line) continue;
+
+        const match = line.match(/^(\S+)(?:\s+(.*))?$/);
+        const command = match[1].toUpperCase();
+        const argument = match[2] || "";
+        let pyLine;
+
+        if (command === "REM") {
+            pyLine = "# " + argument;
+        } else if (command === "DELAY") {
+            const ms = Number.parseInt(argument, 10);
+            if (!Number.isFinite(ms) || ms < 0) {
+                output.push("    # Unsupported invalid DELAY: " + line);
+                continue;
+            }
+            pyLine = `time.sleep(${ms / 1000})`;
+        } else if (command === "STRING") {
+            pyLine = `keyboard_layout.write(${pythonString(argument)})`;
+        } else if (command === "STRINGLN") {
+            pyLine = `keyboard_layout.write(${pythonString(argument + "\\n")})`;
+        } else if (["ENTER", "TAB", "ESC", "ESCAPE", "SPACE", "SPACEBAR", "BACKSPACE", "DELETE", "UP", "DOWN", "LEFT", "RIGHT", "CAPSLOCK", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"].includes(command)) {
+            pyLine = `keyboard.send(${parseKeycode(command)})`;
+        } else if (["GUI", "SHIFT", "CTRL", "CONTROL", "ALT"].includes(command)) {
+            const keys = [command, ...argument.split(/\s+/).filter(Boolean)];
+            pyLine = `keyboard.send(${keys.map(parseKeycode).join(", ")})`;
+        } else if (customCommandMap[command]) {
+            pyLine = customCommandMap[command];
+        } else {
+            output.push("    # Unsupported or unrecognized command: " + line);
+            continue;
+        }
+
+        output.push("    " + pyLine);
+        if (command !== "REM") output.push("    time.sleep(0.05)");
+        converted++;
+    }
+
+    output.push("", "if __name__ == \"__main__\":", "    payload()");
+    document.getElementById("pythonScriptOutput").value = output.join("\n");
+    document.getElementById("status").textContent = `Converted ${converted} command(s)`;
+}
+
+function downloadPythonScript() {
+    const script = document.getElementById("pythonScriptOutput").value;
+    if (!script.trim()) {
+        document.getElementById("status").textContent = "Convert a script first";
+        return;
+    }
+    const blob = new Blob([script], { type: "text/x-python;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "payload.py";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
+async function copyPythonScript() {
+    const script = document.getElementById("pythonScriptOutput").value;
+    if (!script.trim()) {
+        document.getElementById("status").textContent = "Convert a script first";
+        return;
+    }
+    try {
+        await navigator.clipboard.writeText(script);
+        document.getElementById("status").textContent = "Copied to clipboard";
+    } catch {
+        document.getElementById("pythonScriptOutput").select();
+        document.execCommand("copy");
+        document.getElementById("status").textContent = "Copy attempted";
+    }
+}
+
+function clearInput() {
+    document.getElementById("duckyScriptInput").value = "";
+    document.getElementById("pythonScriptOutput").value = "";
+    document.getElementById("status").textContent = "Cleared";
+}
+</script>
+</body>
+</html>
